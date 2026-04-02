@@ -1,0 +1,7 @@
+__pycache__/
+*.pyc
+.collection.json
+.meta.json
+.cursor
+.vscode
+autosave.pkl

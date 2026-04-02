@@ -1,0 +1,1 @@
+# Trucazo - A Truco Roguelike
