@@ -1,7 +1,15 @@
-__pycache__/
-*.pyc
-.collection.json
-.meta.json
-.cursor
-.vscode
+# Trucazo runtime / save files
 autosave.pkl
+.meta.json
+.collection.json
+
+# Python bytecode / cache
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+
+# Test / tooling caches
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/

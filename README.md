@@ -1,62 +1,103 @@
 # Trucazo — A Truco Roguelike
 
-A terminal-based roguelike deckbuilder inspired by Argentine Truco and Balatro. Play rounds of Truco against AI opponents, collect talismans (augments), defeat bosses, and build your truquera deck across escalating blinds.
+Trucazo is a terminal roguelike deckbuilder inspired by Argentine Truco and Balatro. You play through escalating towns and tables, manage money, buy talismans/powers/editions, unlock permanent upgrades, and push for the highest run you can survive.
 
-## 🚀 Quick Start
+## Quick Start
 
-No external dependencies are required! Just clone and play:
+This project uses only the Python standard library. No external dependencies are required.
+
+From the repository root:
 
 ```bash
-git clone https://github.com/yourusername/trucazo.git
-cd trucazo
+python3 __main__.py
+```
+
+If you prefer module execution, run it from the parent directory of the repo:
+
+```bash
+cd ..
 python3 -m trucazo
 ```
 
-## 📖 Game Documentation
+## Current Game Loop
 
-### 🎯 The Core Loop
+- 8 towns per standard run
+- 3 tables per town:
+  - Entry Table
+  - Back Table
+  - Patrón's Table (boss blind)
+- Beat each table by reaching its score target before you run out of hands
+- Visit the shop between tables to buy:
+  - Talismans (passive augments)
+  - Powers (attached to cards)
+  - Editions (card modifiers)
+  - Truquera cards (level up Truco / Envido / Flor / Racha)
+- Earn Prestige at the end of a run and spend it at El Fogón for permanent upgrades
+- Complete Challenges to unlock more content, including Endless Mode
 
-Travel through 8 towns (Antes). In each town, you must survive 3 tables (Blinds):
+## Controls
 
-1. **Entry Table (Small Blind)**
-2. **Back Table (Big Blind)**
-3. **Patrón's Table (Boss Blind)** - Features special modifiers that change the rules!
+### Title screen
 
-Defeat tables by reaching the Score Target before you run out of hands.
+- `1` New Run
+- `2` Collection
+- `3` How to Play
+- `4` El Fogón
+- `5` Challenges
+- `6` Settings
+- `7` Quit
+- `C` Continue, if an autosave exists
 
-### 🃏 Truco Mechanics (Real Argentine Rules)
+### During a hand
 
-* **The Deck:** 40-card Spanish Baraja (Swords ⚔, Clubs 🪵, Cups 🏆, Gold 🪙).
-* **Card Hierarchy:** 1⚔ > 1🪵 > 7⚔ > 7🪙 > 3 > 2 > 1🏆 1🪙 > 12 > 11 > 10 > 7🏆 7🪵 > 6 > 5 > 4.
-* **Envido:** A pre-round bet based on your two best cards of the same suit. (Values: 1-7 = face value; 10, 11, 12 = 0). Score = 20 + sum of cards. Max score is 33.
-* **Flor:** If you are dealt 3 cards of the same suit, you have a Flor! This overrides Envido for massive points.
-* **Truco:** During the hand, call Truco to multiply the round's score (x2). The AI can fold, accept, or raise (Retruco x3, Vale Cuatro x4).
-* **Cascade (Racha):** Win consecutive hands to build a score multiplier (up to x2.5!).
+- `1` / `2` / `3` play a card
+- `e` call Envido
+- `f` call Flor
+- `t` call Truco
+- `i` show info / deck state
+- `q` quit
 
-### 🛒 Roguelike Elements (The Shop)
+## Settings
 
-Between tables, visit the Shop (El Kiosco) to spend your winnings and upgrade your run:
+The game includes:
 
-* **Talismanes (Augments):** Passive buffs (max 3 slots). Examples: Mate Amargo (extra income), Poncho (Envido shield).
-* **Ediciones:** Visual and mechanical upgrades applied permanently to cards (e.g., Dorada gives money when played, Holográfica multiplies score x1.5).
-* **Poderes:** Magical effects triggered when a card is played (e.g., Fuego gives +20 flat points, Hielo lowers the opponent's card rank).
-* **Truqueras:** Cards that permanently level up the base score of your Truco, Envido, or Flor hands.
+- Bilingual UI: Español / English
+- Difficulty modes:
+  - Easy
+  - Normal
+  - Hard
+- Persistent meta-progression and collection tracking
 
-### 🔥 Meta-Progression (El Fogón)
-
-Even when you lose, you earn Prestige. Spend Prestige at The Campfire (El Fogón) to unlock permanent upgrades across all future runs, such as starting money, extra hands, or shop discounts. Complete Challenges to unlock new items, bosses, and the Endless Mode!
-
-## ⚙️ Project Structure
+## Repository Layout
 
 ```text
 trucazo/
-├── __main__.py      # Entry point
-├── game.py          # Main game engine, run loop, shops, menus
-├── cards.py         # Spanish baraja deck, card classes, Truco ranking
-├── hands.py         # Battle resolution, AI logic, scoring
-├── data.py          # Talismans, bosses, shop items, truquera cards
-├── display.py       # Terminal rendering, colors, layout
-├── collection.py    # Persistent item collection tracking
-├── meta.py          # Meta-progression (prestige, challenges, unlocks)
-└── difficulty.py    # Difficulty configurations
+├── __main__.py      # Entry point for `python3 __main__.py`
+├── __init__.py      # Package marker
+├── cards.py         # Spanish deck, card models, Truco hierarchy, scoring helpers
+├── hands.py         # AI opponent, battle resolution, hand scoring
+├── data.py          # Talismans, bosses, shop pools, Truquera cards
+├── display.py       # Terminal rendering, menus, layout, colors
+├── game.py          # Main game loop, menus, shop, run flow
+├── collection.py    # Persistent collection tracking
+├── meta.py          # Prestige, El Fogón upgrades, challenges
+├── lang.py          # English / Spanish strings and help text
+├── difficulty.py    # Difficulty tiers and modifiers
+└── LICENSE
 ```
+
+## Save Data
+
+The game writes a few files next to the code when you play:
+
+- `autosave.pkl` — mid-run save file
+- `.meta.json` — permanent meta-progression
+- `.collection.json` — collection / discovery tracking
+
+These generated files are ignored by git.
+
+## Notes
+
+- Runs are capped at 8 towns by default.
+- If you unlock Endless Mode, the run can continue beyond town 8.
+- The project is designed to be launched from the terminal, not via a GUI.
