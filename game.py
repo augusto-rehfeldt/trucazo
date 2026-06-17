@@ -1,7 +1,7 @@
 """Main game engine for Trucazo."""
 import random, time, os, pickle, re
 from cards import Mazo, Poder, Edition, jerarquia, envido_score, tiene_flor, flor_score, fuerza_mano
-from hands import Banca, resolver_baza, calcular_puntaje_mano, calcular_envido_puntaje, TRUCO_NIVELES
+from hands import Banca, resolver_baza, calcular_puntaje_mano, calcular_envido_puntaje, calcular_racha_mult, TRUCO_NIVELES
 from data import (
                   get_blind_target, get_blind_reward, get_random_jefe,
                   get_shop_talismanes, get_shop_poderes, get_shop_ediciones,
@@ -30,12 +30,6 @@ def delete_save():
     if os.path.exists(SAVE_FILE):
         os.remove(SAVE_FILE)
 
-def pause():
-    input("")
-
-def prompt(msg=""):
-    return input(msg)
-
 
 class GameState:
     def __init__(self, meta=None):
@@ -59,7 +53,7 @@ class GameState:
         self.log = []
 
         # Difficulty config
-        self._difficulty_cfg = self.meta.get_difficulty_config()
+        self._difficulty_cfg = get_difficulty_config(self.meta.difficulty)
         self._difficulty_income_bonus = self._difficulty_cfg.get("income_bonus", 0)
 
         # Apply difficulty starting money bonus
@@ -119,14 +113,7 @@ class GameState:
 
 
 def _get_racha_mult(gs):
-    racha_mult = 1.0
-    if gs.racha > 1:
-        racha_level = gs.levels.get("racha", 1)
-        base_bonuses = {2: 0.25, 3: 0.5, 4: 1.0}
-        base_bonus = base_bonuses.get(gs.racha, 1.5 if gs.racha >= 5 else 0)
-        bonus = base_bonus + (racha_level - 1) * 0.25 * (gs.racha - 1)
-        racha_mult = 1.0 + bonus
-    return racha_mult
+    return calcular_racha_mult(gs.racha, gs.levels.get("racha", 1))
 
 
 def _score_hand(gs, cards, truco_mult, env_bonus, ante):
@@ -200,7 +187,7 @@ def envido_phase(gs, player_hand, house_hand, banca):
     if banca.quiere_cantar_envido(h_env):
         print(f"\n  {ORNG}{B}La Banca canta: ¡Envido!{R}")
         time.sleep(0.5)
-        ch = prompt(f"  {GRN}[Q]{R}uiero │ {NRED}[N]{R}o quiero │ {ORNG}[S]{R}ubir → ")
+        ch = input(f"  {GRN}[Q]{R}uiero │ {NRED}[N]{R}o quiero │ {ORNG}[S]{R}ubir → ")
         if ch == "n":
             return -1  # lost 1 pt
         elif ch == "s":
@@ -282,7 +269,7 @@ def play_truco_hand(gs, ante, blind_type, blind_name, target, score, hands_left=
         chosen = set()
         while len(chosen) < 3:
             prompt_str = "Cartas elegidas" if get_lang() == "es" else "Chosen cards"
-            ch = prompt(f"\n  {prompt_str} ({len(chosen)}/3) → ")
+            ch = input(f"\n  {prompt_str} ({len(chosen)}/3) → ")
             nums = re.findall(r'\d+', ch)
             if nums:
                 for n in nums:
@@ -378,7 +365,7 @@ def play_truco_hand(gs, ante, blind_type, blind_name, target, score, hands_left=
             nxt = TRUCO_NIVELES[min(truco_idx, len(TRUCO_NIVELES)-1)]
             render_truco_call("house", nxt[2])
             time.sleep(0.3)
-            ch = prompt(f"  {GRN}[Q]{R}uiero │ {NRED}[N]{R}o quiero │ {ORNG}[S]{R}ubir → ")
+            ch = input(f"  {GRN}[Q]{R}uiero │ {NRED}[N]{R}o quiero │ {ORNG}[S]{R}ubir → ")
             if ch == "n":
                 return 0  # fold, house wins hand
             elif ch == "s" and truco_idx + 1 < len(TRUCO_NIVELES):
@@ -420,7 +407,7 @@ def play_truco_hand(gs, ante, blind_type, blind_name, target, score, hands_left=
         # Player input loop
         card_idx = None
         while card_idx is None:
-            ch = prompt(f"\n  {t('choose')}: ")
+            ch = input(f"\n  {t('choose')}: ")
             if ch == "q":
                 return -999  # quit signal
             elif ch == "a":
@@ -443,7 +430,7 @@ def play_truco_hand(gs, ante, blind_type, blind_name, target, score, hands_left=
                 if not eds:
                     print(f"  {D}(Sin ediciones esta mano){R}")
 
-                prompt(center(f"\n  {D}{t('press_enter_back')}{R}"))
+                input(center(f"\n  {D}{t('press_enter_back')}{R}"))
                 battle_kw['money'] = gs.money
                 render_battle(player_hand, house_played, player_played, ronda, p_wins, h_wins,
                              stake_name, stake_mult, envido_p=p_env_score if ronda == 0 else None,
@@ -452,7 +439,7 @@ def play_truco_hand(gs, ante, blind_type, blind_name, target, score, hands_left=
             elif ch == "i":
                 render_hierarchy()
                 render_levels(gs.levels)
-                prompt(center(f"\n  {D}{t('press_enter_back')}{R}"))
+                input(center(f"\n  {D}{t('press_enter_back')}{R}"))
                 # Re-render
                 battle_kw['money'] = gs.money
                 render_battle(player_hand, house_played, player_played, ronda, p_wins, h_wins,
@@ -500,7 +487,7 @@ def play_truco_hand(gs, ante, blind_type, blind_name, target, score, hands_left=
                     nxt2 = TRUCO_NIVELES[truco_idx]
                     render_truco_call("house", nxt2[2])
                     time.sleep(0.3)
-                    rch = prompt(f"  {GRN}[Q]{R}uiero │ {NRED}[N]{R}o quiero → ")
+                    rch = input(f"  {GRN}[Q]{R}uiero │ {NRED}[N]{R}o quiero → ")
                     if rch == "n":
                         return 0
                     stake_mult = nxt2[1]
@@ -731,7 +718,7 @@ def _player_envido(gs, p_env, h_env, banca):
     elif dec == "raise":
         print(f"  {ORNG}{B}La Banca: ¡Real Envido!{R}")
         gs.add_log(f"{ORNG}La Banca: ¡Real Envido!{R}")
-        ch = prompt(f"  {GRN}[Q]{R}uiero │ {NRED}[N]{R}o quiero → ")
+        ch = input(f"  {GRN}[Q]{R}uiero │ {NRED}[N]{R}o quiero → ")
         if ch == "n":
             return -1
         return _envido_showdown(gs, p_env, h_env, mult=2)
@@ -767,7 +754,7 @@ def run_blind(gs, ante, blind_type, boss=None):
         hands_left = gs.hands_total
 
     render_blind_intro(ante, blind_type, target, boss if blind_type == "boss" else None)
-    pause()
+    input("")
 
     score = 0
 
@@ -791,11 +778,11 @@ def run_blind(gs, ante, blind_type, boss=None):
             gs.money += reward + gs.income()
             print(f"    {GOLD}💰 +${reward} {t('reward')}  │  +${gs.income()} {t('income_label')}{R}")
             time.sleep(0.5)
-            prompt(f"\n{center(f'{D}{t(chr(112)+chr(114)+chr(101)+chr(115)+chr(115)+chr(95)+chr(101)+chr(110)+chr(116)+chr(101)+chr(114))}{R}')}")
+            input(f"\n{center(f'{D}{t('press_enter')}{R}')}")
             return True
 
         if hands_left > 0 and score < target:
-            prompt(f"\n{center(f'{D}{t(chr(112)+chr(114)+chr(101)+chr(115)+chr(115)+chr(95)+chr(101)+chr(110)+chr(116)+chr(101)+chr(114))}{R}')}")
+            input(f"\n{center(f'{D}{t('press_enter')}{R}')}")
 
     if score < target:
         print(f"\n  {NRED}{B}┏{'━' * 38}┓{R}")
@@ -815,9 +802,9 @@ def run_blind(gs, ante, blind_type, boss=None):
             if survival_bonus:
                 print(f"  {PURP}💪 Cicatriz: +{survival_bonus} manos{R}")
             time.sleep(0.5)
-            prompt(f"\n{center(f'{D}{t(chr(112)+chr(114)+chr(101)+chr(115)+chr(115)+chr(95)+chr(101)+chr(110)+chr(116)+chr(101)+chr(114))}{R}')}")
+            input(f"\n{center(f'{D}{t('press_enter')}{R}')}")
             return True
-        prompt(f"\n  {D}{t('press_enter')}{R}")
+        input(f"\n  {D}{t('press_enter')}{R}")
         return False
 
     return True
@@ -851,7 +838,7 @@ def run_shop(gs, ante):
 
     while True:
         render_shop(tals, pods, eds, truqs, gs.money, reroll_cost, gs.talismanes, gs.talisman_slots)
-        ch = prompt(f"  {t('choose')}: ")
+        ch = input(f"  {t('choose')}: ")
 
         if ch == "q":
             return None
@@ -859,7 +846,7 @@ def run_shop(gs, ante):
             return True
         elif ch == "d":
             render_deck_view(gs.mazo.cards)
-            prompt(center(f"{D}{t('press_enter')}{R}"))
+            input(center(f"{D}{t('press_enter')}{R}"))
         elif ch == "r":
             if gs.money >= reroll_cost:
                 gs.money -= reroll_cost
@@ -985,7 +972,7 @@ def _sell_menu(gs):
     for i, a in enumerate(gs.talismanes):
         print(f"  [{i+1}] {a.emoji} {a.name} → ${a.sell_value}")
     print(f"  [0] {t('cancel')}")
-    ch = prompt(f"  {t('choose')}: ")
+    ch = input(f"  {t('choose')}: ")
     try:
         idx = int(ch)
         if 1 <= idx <= len(gs.talismanes):
@@ -1110,14 +1097,14 @@ def _end_run(gs, ante, won):
 
     # Render
     render_game_over(won, ante, gs.collection)
-    pause()
+    input("")
     render_run_end_prestigio(earned, ante, won, new_challenges)
-    pause()
+    input("")
 
     # Check if endless was just unlocked
     if any(ch["unlock_id"] == "endless" for ch in new_challenges):
         render_endless_unlock()
-        pause()
+        input("")
 
 
 # ── FOGÓN & CHALLENGES MENUS ──
@@ -1127,7 +1114,7 @@ def run_fogon(meta):
     from meta import FOGON_UPGRADES
     while True:
         render_fogon(meta)
-        ch = prompt(f"  {t('choose')}: ")
+        ch = input(f"  {t('choose')}: ")
         if ch == "0" or ch == "q":
             return
         try:
@@ -1151,7 +1138,7 @@ def run_fogon(meta):
 def run_challenges(meta):
     """Desafíos: challenges view."""
     render_challenges(meta)
-    pause()
+    input("")
 
 
 # ── DIFFICULTY SELECTION ──
@@ -1160,7 +1147,7 @@ def select_difficulty(meta):
     """Show difficulty select before a new run. Returns True if selected, False if back."""
     while True:
         render_difficulty_select(meta, DIFFICULTY_ORDER, DIFFICULTY_CONFIG)
-        ch = prompt(f"  {t('choose')}: ")
+        ch = input(f"  {t('choose')}: ")
         if ch == "0" or ch == "q":
             return False
         try:
@@ -1176,7 +1163,7 @@ def run_difficulty_menu(meta):
     """Standalone difficulty change from main menu."""
     while True:
         render_difficulty_select(meta, DIFFICULTY_ORDER, DIFFICULTY_CONFIG, standalone=True)
-        ch = prompt(f"  {t('choose')}: ")
+        ch = input(f"  {t('choose')}: ")
         if ch == "0" or ch == "q":
             return
         try:
@@ -1196,7 +1183,7 @@ def run_settings(meta):
     from display import render_settings
     while True:
         render_settings(meta)
-        ch = prompt(f"  {t('choose')}: ")
+        ch = input(f"  {t('choose')}: ")
         if ch == "0" or ch == "q":
             return
         elif ch == "1":
@@ -1222,7 +1209,7 @@ def main_menu():
         from display import render_title
         render_title(has_save=has_save)
         
-        ch = prompt(f"  {t('choose')}: ").lower()
+        ch = input(f"  {t('choose')}: ").lower()
 
         if ch == "c" and has_save:
             run_game(meta, load_save=True)
@@ -1235,10 +1222,10 @@ def main_menu():
         elif ch == "2":
             col = Collection()
             render_collection(col)
-            pause()
+            input("")
         elif ch == "3":
             render_how_to_play()
-            pause()
+            input("")
         elif ch == "4":
             run_fogon(meta)
         elif ch == "5":

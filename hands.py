@@ -88,6 +88,14 @@ def resolver_baza(card_p, card_h, poder_activo=True):
     return "player" if p_rank > h_rank else "house"
 
 
+def calcular_racha_mult(racha, racha_level=1):
+    if racha <= 1:
+        return 1.0
+    base_bonuses = {2: 0.25, 3: 0.5, 4: 1.0}
+    base_bonus = base_bonuses.get(racha, 1.5 if racha >= 5 else 0)
+    return 1.0 + base_bonus + (racha_level - 1) * 0.25 * (racha - 1)
+
+
 def calcular_puntaje_mano(cards, truco_mult, racha=0, augments=None, levels=None):
     """Calculate score for winning a Truco hand.
 
@@ -131,14 +139,7 @@ def calcular_puntaje_mano(cards, truco_mult, racha=0, augments=None, levels=None
         if c.poder == Poder.QUIEBRE:
             quiebre_mult *= 2.5
 
-    # Racha (cascade combo)
-    racha_level = levels.get("racha", 1)
-    racha_mult = 1.0
-    if racha > 1:
-        base_bonuses = {2: 0.25, 3: 0.5, 4: 1.0}
-        base_bonus = base_bonuses.get(racha, 1.5 if racha >= 5 else 0)
-        bonus = base_bonus + (racha_level - 1) * 0.25 * (racha - 1)
-        racha_mult = 1.0 + bonus
+    racha_mult = calcular_racha_mult(racha, levels.get("racha", 1))
 
     # Augment bonuses
     aug_mult = 1.0
@@ -173,10 +174,4 @@ TRUCO_NIVELES = [
     ("truco", 2, "Truco"),
     ("retruco", 3, "Retruco"),
     ("vale_cuatro", 4, "Vale Cuatro"),
-]
-
-ENVIDO_NIVELES = [
-    ("envido", 2, "Envido"),
-    ("real_envido", 4, "Real Envido"),
-    ("falta_envido", 0, "Falta Envido"),  # 0 = all remaining
 ]

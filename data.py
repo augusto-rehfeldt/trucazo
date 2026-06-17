@@ -5,13 +5,14 @@ from cards import Palo, Poder, Edition
 
 class Talisman:
     """Passive augment (max 3 slots). Argentine-themed."""
-    def __init__(self, name, desc, cost, effect, emoji="🔷"):
+    def __init__(self, name, desc, cost, effect, emoji="🔷", unlock_id=None):
         self.name = name
         self.desc = desc
         self.cost = cost
         self.effect = effect
         self.emoji = emoji
         self.sell_value = max(1, cost // 2)
+        self.unlock_id = unlock_id  # ponytail: collocated; dissolves the name→id map
     def __repr__(self):
         return f"{self.emoji} {self.name}"
 
@@ -69,21 +70,21 @@ ALL_TALISMANES = [
 
 UNLOCKABLE_TALISMANES = [
     Talisman("El Gringo", "Suma +5 puntos fijos a todos tus Envidos", 6,
-             {"type": "envido_bonus", "value": 5}, "🤠"),
+             {"type": "envido_bonus", "value": 5}, "🤠", unlock_id="el_gringo"),
     Talisman("La Yapa", "Multiplica el dinero ganado por Rachas Gauchas x2", 5,
-             {"type": "cascade_money", "value": 2}, "🎉"),
+             {"type": "cascade_money", "value": 2}, "🎉", unlock_id="la_yapa"),
     Talisman("El Domador", "Reduce el debuff/efecto de los jefes en un 25%", 7,
-             {"type": "boss_weaken", "value": 0.25}, "🦁"),
+             {"type": "boss_weaken", "value": 0.25}, "🦁", unlock_id="el_domador"),
     Talisman("El Purista", "+15 puntos base permanentes sin importar las cartas al ganar cada mano", 6,
-             {"type": "base_bonus", "value": 15}, "🧘"),
+             {"type": "base_bonus", "value": 15}, "🧘", unlock_id="el_purista"),
     Talisman("Cicatriz", "Si sobrevives con Cuero Duro pasás de mesa con +2 manos extra", 5,
-             {"type": "survival_hands", "value": 2}, "💪"),
+             {"type": "survival_hands", "value": 2}, "💪", unlock_id="cicatriz"),
     Talisman("El Caudillo", "Agrega +1 mano total y te paga $1 extra de ingreso por mesa", 6,
-             {"type": "extra_hands", "value": 1}, "🩸"),
+             {"type": "extra_hands", "value": 1}, "🩸", unlock_id="el_caudillo"),
     Talisman("Las Espuelas", "Tu multiplicador de Racha empieza directamente en x2", 5,
-             {"type": "cascade_money", "value": 1.5}, "🐴"),
+             {"type": "cascade_money", "value": 1.5}, "🐴", unlock_id="las_espuelas"),
     Talisman("El Milagro", "+2 manos extra en la última mesa del Ante", 6,
-             {"type": "extra_hands", "value": 2}, "🎲"),
+             {"type": "extra_hands", "value": 2}, "🎲", unlock_id="el_milagro"),
 ]
 
 UNLOCKABLE_PODERES = [
@@ -174,15 +175,7 @@ def get_shop_talismanes(n=2, owned=None, unlocked=None):
     # Add unlockable talismanes if unlocked
     if unlocked:
         for ut in UNLOCKABLE_TALISMANES:
-            # Map talisman name to unlock_id for matching
-            unlock_map = {
-                "El Gringo": "el_gringo", "La Yapa": "la_yapa",
-                "El Domador": "el_domador", "El Purista": "el_purista",
-                "Cicatriz": "cicatriz", "El Caudillo": "el_caudillo",
-                "Las Espuelas": "las_espuelas", "El Milagro": "el_milagro",
-            }
-            uid = unlock_map.get(ut.name)
-            if uid and uid in unlocked and ut.name not in owned:
+            if ut.unlock_id in unlocked and ut.name not in owned:
                 pool.append(ut)
     if not pool:
         return []

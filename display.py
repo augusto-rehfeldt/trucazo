@@ -5,10 +5,8 @@ from lang import t, get_lang
 R = "\033[0m"
 B = "\033[1m"
 D = "\033[2m"
-IT = "\033[3m"
-RV = "\033[7m"
-BR_RED = "\033[91m"; BR_GRN = "\033[92m"; BR_YEL = "\033[93m"
-BR_BLU = "\033[94m"; BR_MAG = "\033[95m"; BR_CYN = "\033[96m"; BR_WHT = "\033[97m"
+BR_RED = "\033[91m"; BR_YEL = "\033[93m"
+BR_CYN = "\033[96m"; BR_WHT = "\033[97m"
 WHITE = "\033[37m"; RED = "\033[31m"; GREEN = "\033[32m"; YELLOW = "\033[33m"
 
 def rgb(r, g, b): return f"\033[38;2;{r};{g};{b}m"
@@ -16,7 +14,6 @@ def rgb(r, g, b): return f"\033[38;2;{r};{g};{b}m"
 PINK = rgb(255, 50, 150); BLUE = rgb(50, 150, 255); GRN = rgb(50, 255, 150)
 PURP = rgb(180, 80, 255); ORNG = rgb(255, 150, 50); CYAN = rgb(50, 255, 255)
 NYEL = rgb(255, 255, 50); NRED = rgb(255, 60, 60); GOLD = rgb(255, 215, 0)
-SILV = rgb(192, 192, 192)
 
 CBRD = rgb(90, 90, 100)  # subtle gray for card borders (replaces dim)
 PALO_C = {0: rgb(220, 230, 255), 1: rgb(80, 255, 120), 2: rgb(255, 80, 90), 3: GOLD}  # Espadas, Bastos, Copas, Oros
@@ -277,7 +274,7 @@ def render_difficulty_select(meta, order, config, standalone=False):
     """Render difficulty selection screen."""
     clear()
     lang = get_lang()
-    print(f"\n{center(f'{CYAN}{B}✦ {t(chr(100)+chr(105)+chr(102)+chr(102)+chr(105)+chr(99)+chr(117)+chr(108)+chr(116)+chr(121)+chr(95)+chr(116)+chr(105)+chr(116)+chr(108)+chr(101))} ✦{R}')}")
+    print(f"\n{center(f'{CYAN}{B}✦ {t('difficulty_title')} ✦{R}')}")
     print(center(f"{D}{'─' * 40}{R}\n"))
 
     tier_colors = {"easy": GRN, "normal": NYEL, "hard": NRED}
@@ -608,11 +605,6 @@ def render_truco_call(caller, name):
     print(f"  {c}{B}{' ' * pad}{who}: ¡{name}!{R}")
     print(f"  {c}{B}{'═' * 40}{R}")
 
-def render_accept_decline(what, caller):
-    who = "La Banca" if caller == "house" else "Vos"
-    print(f"\n  {NYEL}{B}{who} canta: ¡{what}!{R}")
-    print(f"  {GRN}{B}[Q]{R}uiero  │  {NRED}{B}[N]{R}o quiero  │  {ORNG}{B}[S]{R}ubir")
-
 def render_actions(can_env=True, can_truco=True, flor=False, n_cards=0):
     acts = []
     if n_cards > 0: acts.append(f"{GRN}{B}[1-{n_cards}]{R} {t('play_card')}")
@@ -686,7 +678,7 @@ def render_hierarchy():
 
 def render_how_to_play():
     clear()
-    print(f"\n{center(f'{CYAN}{B}✦ {t(chr(104)+chr(116)+chr(112)+chr(95)+chr(116)+chr(105)+chr(116)+chr(108)+chr(101))} ✦{R}')}")
+    print(f"\n{center(f'{CYAN}{B}✦ {t('htp_title')} ✦{R}')}")
     txt = t("htp_text")
     txt = txt.replace("{b}", B).replace("{r}", R).replace("{d}", D)
     txt = txt.replace("{o}", ORNG).replace("{p}", PURP).replace("{rr}", NRED)
@@ -699,7 +691,7 @@ def render_collection(col):
     from data import ALL_TALISMANES
     from cards import Poder, Edition
     clear()
-    print(f"\n{center(f'{GOLD}{B}✦ {t(chr(99)+chr(111)+chr(108)+chr(108)+chr(101)+chr(99)+chr(116)+chr(105)+chr(111)+chr(110))} ✦{R}')}")
+    print(f"\n{center(f'{GOLD}{B}✦ {t('collection')} ✦{R}')}")
     print(center(f"{D}{'─' * 50}{R}\n"))
     print(center(f"{CYAN}{t('total_runs')}: {col.total_runs} │ {t('wins')}: {col.wins} │ {t('best_ante')}: {col.best_ante}{R}"))
     print(center(f"{GRN}Manos: W{col.manos_ganadas} L{col.manos_perdidas}{R}"))
@@ -716,7 +708,7 @@ def render_collection(col):
     for p in all_p:
         if p.nombre in col.discovered_poderes: print(f"  ⚡ {p.nombre} - {p.desc}")
         else: print(f"  {D}?? ????????????{R}")
-    print(f"\n{center(f'{t(chr(100)+chr(105)+chr(115)+chr(99)+chr(111)+chr(118)+chr(101)+chr(114)+chr(101)+chr(100))}: {col.completion_pct}%')}\n")
+    print(f"\n{center(f'{t('discovered')}: {col.completion_pct}%')}\n")
     print(center(f"{D}{t('press_enter_return')}{R}"))
 
 def render_game_over(won, ante, col):
@@ -731,7 +723,7 @@ def render_game_over(won, ante, col):
         text = t('game_over')
         print(center(f"{NRED}{B}║{text:^27}║{R}"))
         print(center(f"{NRED}{B}╚{'═' * 27}╝{R}"))
-    print(f"\n{center(f'{t(chr(97)+chr(110)+chr(116)+chr(101))} {ante}')}")
+    print(f"\n{center(f'{t('ante')} {ante}')}")
     print(center(f"{t('total_runs')}: {col.total_runs} │ {t('wins')}: {col.wins} │ {col.completion_pct}%"))
     print(f"\n{center(f'{D}{t('press_enter_return')}{R}')}")
 
@@ -746,7 +738,7 @@ def render_blind_intro(ante, blind_type, target, boss=None):
     if boss and blind_type == "boss":
         print(f"\n{center(f'{NRED}{B}{boss.emoji} {boss.name}{R}')}")
         print(center(f"{NRED}{boss.desc}{R}"))
-    print(f"\n{center(f'{D}{t(chr(112)+chr(114)+chr(101)+chr(115)+chr(115)+chr(95)+chr(101)+chr(110)+chr(116)+chr(101)+chr(114))}{R}')}")
+    print(f"\n{center(f'{D}{t('press_enter')}{R}')}")
 
 def render_deck_view(cards):
     from cards import Palo
@@ -795,7 +787,7 @@ def render_fogon(meta):
     from meta import FOGON_UPGRADES
     clear()
     lang = get_lang()
-    print(f"\n{center(f'{GOLD}{B}🔥 {t(chr(102)+chr(111)+chr(103)+chr(111)+chr(110)+chr(95)+chr(116)+chr(105)+chr(116)+chr(108)+chr(101))} 🔥{R}')}")
+    print(f"\n{center(f'{GOLD}{B}🔥 {t('fogon_title')} 🔥{R}')}")
     print(center(f"{D}{t('fogon_subtitle')}{R}"))
     print(center(f"{GOLD}{t('prestigio')}: {B}{meta.prestigio}{R}"))
     print(center(f"{D}{'─' * 50}{R}\n"))
@@ -841,7 +833,7 @@ def render_challenges(meta):
     from meta import DESAFIOS
     clear()
     lang = get_lang()
-    print(f"\n{center(f'{NYEL}{B}🏆 {t(chr(100)+chr(101)+chr(115)+chr(97)+chr(102)+chr(105)+chr(111)+chr(115)+chr(95)+chr(116)+chr(105)+chr(116)+chr(108)+chr(101))} 🏆{R}')}")
+    print(f"\n{center(f'{NYEL}{B}🏆 {t('desafios_title')} 🏆{R}')}")
     print(center(f"{D}{t('desafios_subtitle')}{R}"))
     print(center(f"{D}{'─' * 50}{R}\n"))
 
@@ -900,4 +892,4 @@ def render_endless_unlock():
     print(center(f"{GOLD}{B}👑 {t('endless_unlocked')} 👑{R}"))
     print(center(f"{GOLD}{B}{'═' * 40}{R}"))
     print(center(f"{D}{t('endless_desc')}{R}"))
-    print(f"\n{center(f'{D}{t(chr(112)+chr(114)+chr(101)+chr(115)+chr(115)+chr(95)+chr(101)+chr(110)+chr(116)+chr(101)+chr(114))}{R}')}")
+    print(f"\n{center(f'{D}{t('press_enter')}{R}')}")

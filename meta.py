@@ -404,10 +404,6 @@ class MetaProgress:
             self.difficulty = tier
             self.save()
 
-    def get_difficulty_config(self):
-        from difficulty import get_difficulty_config
-        return get_difficulty_config(self.difficulty)
-
     def shop_discount(self):
         """Return discount fraction (0.0 to 0.30)."""
         val = self.get_upgrade_value("descuento")

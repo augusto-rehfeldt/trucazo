@@ -95,15 +95,12 @@ class Poder(Enum):
 
 
 class Card:
-    _next_id = 0
 
     def __init__(self, rank, palo, edition=Edition.COMUN, poder=Poder.NADA):
         self.rank = rank       # int: 1-7, 10, 11, 12
         self.palo = palo       # Palo enum
         self.edition = edition
         self.poder = poder
-        Card._next_id += 1
-        self.id = Card._next_id
 
     @property
     def rank_label(self):
@@ -178,11 +175,6 @@ def jerarquia(card):
 
 # ── ENVIDO SCORING ──
 
-def envido_valor(card):
-    """Envido value of a single card."""
-    return card.envido_val
-
-
 def envido_score(cards):
     """Calculate envido for a 3-card hand (real Truco rules).
 
@@ -196,14 +188,14 @@ def envido_score(cards):
     best = 0
     for palo, palo_cards in by_palo.items():
         if len(palo_cards) >= 2:
-            vals = sorted([envido_valor(c) for c in palo_cards], reverse=True)
+            vals = sorted([c.envido_val for c in palo_cards], reverse=True)
             score = 20 + vals[0] + vals[1]
             best = max(best, score)
 
     if best == 0:
         if not cards:
             return 0
-        best = max(envido_valor(c) for c in cards)
+        best = max(c.envido_val for c in cards)
 
     return best
 
@@ -217,7 +209,7 @@ def tiene_flor(cards):
 
 def flor_score(cards):
     """Flor score (like envido: 20 + two highest same-suit values)."""
-    vals = sorted([envido_valor(c) for c in cards], reverse=True)
+    vals = sorted([c.envido_val for c in cards], reverse=True)
     return 20 + vals[0] + vals[1]
 
 
